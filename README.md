@@ -1,383 +1,636 @@
-# testing_purpose
-Absolutely bro — here is your **complete UPDATED README.md**, with the **correctly fixed Project Structure section** that *will render perfectly* on GitHub.
 
-Everything else is kept exactly as you wrote — only cleaned, styled, and structured professionally.
 
-👇 **Copy–paste this entire file into README.md**
+#  CI/CD Capstone Project – Docker & Jenkins
 
----
+## 1. Project Overview
 
-# 🛡️ Safe Code Executor
+This project demonstrates a **complete end-to-end CI/CD pipeline** implemented using **Docker, Docker Compose, Jenkins, and GitHub Webhooks** for a **2-tier containerized web application**.
 
-A secure Flask + Docker–based sandbox that runs **Python** and **JavaScript** code safely in isolated containers.
+The primary goal of this project is to **automate the full application lifecycle** — from source code commit to deployment — while following **real-world DevOps best practices**, including containerization, automated testing, security scanning, and staged deployments.
 
-Safe Code Executor is a secure sandbox system that runs untrusted Python and JavaScript code inside isolated Docker containers.
-It enforces strict security controls—timeout, memory limits, no network, and read-only filesystem—to ensure safe execution. Includes a simple web UI and execution history.
-
-This guide shows **exactly how to run the project**, with **step-by-step instructions**, **command examples**, and **expected output** for every step.
+Every code push to GitHub **automatically triggers the Jenkins pipeline**, which builds, tests, scans, and deploys the application without manual intervention.
 
 ---
 
-## 📁 Project Structure
+## 2. Problem Statement
 
-```text
-Safe_Code_Executor/
+**Build a complete CI/CD system that automatically tests, builds, and deploys a simple web application through staging environments using Docker and Jenkins.**
+
+---
+
+## 3. Technology Stack
+
+| Layer             | Technology            |
+| ----------------- | --------------------- |
+| Frontend          | HTML, CSS, JavaScript |
+| Backend           | Python Flask          |
+| Database          | PostgreSQL            |
+| CI/CD             | Jenkins               |
+| Containerization  | Docker                |
+| Orchestration     | Docker Compose        |
+| Security Scanning | Trivy                 |
+| Webhooks          | GitHub Webhook        |
+| Version Control   | GitHub                |
+| Webhook Exposure  | ngrok                 |
+
+---
+
+## 4. High-Level Architecture
+
+### Architecture Flow
+
+```
+Developer
+   |
+   | Git Push
+   v
+GitHub Repository
+   |
+   | Webhook
+   v
+Jenkins Pipeline
+   |
+   +--> Build Images
+   +--> Run Tests
+   +--> Security Scan
+   +--> Deploy to Staging
+   |
+   v
+Docker Containers
+   |
+Frontend --> Backend --> PostgreSQL
+```
+
+ Fully automated
+ Webhook-driven
+ No manual pipeline triggers
+
+---
+
+## 5. Application Architecture
+
+### 5.1 Frontend
+
+* Static HTML/CSS + JavaScript
+* Served via **Nginx**
+* Displays:
+
+  * Backend connectivity status
+  * Database connection status
+  * Application health
+
+### 5.2 Backend
+
+* Flask REST API
+* Exposes endpoints:
+
+  * `/health` – Application & DB health
+* Uses **environment variables** for database connectivity
+
+### 5.3 Database
+
+* PostgreSQL running in a container
+* Persistent data storage using Docker volumes
+
+---
+
+## 6. Project Structure
+
+```
+ci-cd-flask-project/
 │
-├── app/
-│   ├── main.py              # Flask server (routes, validation, UI)
-│   ├── executor.py          # Docker sandbox executor
-│   ├── history.json         # Stores last 10 executions
-│   └── templates/
-│       └── index.html       # Web UI
+├── backend/
+│   ├── app/
+│   │   ├── main.py
+│   │   └── db.py
+│   ├── tests/
+│   ├── requirements.txt
+│   └── Dockerfile
 │
-├── docs/
-│   └── SECURITY_NOTES.md    # Notes from Docker security experiments
+├── frontend/
+│   ├── templates/
+│   ├── static/
+│   └── Dockerfile
 │
-├── requirements.txt         # Python dependencies
-└── README.md                # Documentation
+├── scripts/
+│   └── deploy.sh
+│
+├── docker-compose.yml
+├── Jenkinsfile
+└── README.md
 ```
 
 ---
 
-## 📦 What Each Component Does
+## 7. Dockerization Strategy
 
-| Component             | Description                                                                      |
-| --------------------- | -------------------------------------------------------------------------------- |
-| **main.py**           | API `/run`, `/history`, `/ui`, validates input, saves history                    |
-| **executor.py**       | Runs code safely inside Docker with limits (timeout, RAM, no network, read-only) |
-| **index.html**        | UI (textarea + language selector + run button + output)                          |
-| **history.json**      | Stores last 10 executions with timestamp                                         |
-| **SECURITY_NOTES.md** | Results of sandbox experiments                                                   |
+### Backend Dockerfile Best Practices
 
----
+*  Multi-stage build
+*  Reduced image size
+*  Non-root user
+*  Optimized layer caching
 
-## 🏗 System Architecture (5 Layers)
+### Frontend Dockerfile Best Practices
 
-### **1️ UI (User Interface)**
+* Based on `nginx:alpine`
+* Minimal runtime footprint
+* Static content only
 
-* HTML textarea for writing code
-* Language selector
-* Sends `{ language, code }` to backend
-* Displays output / errors
+### Image Optimization
 
-### **2️ Flask API**
-
-* Validates:
-
-  * Supported languages (`python`, `javascript`)
-  * Code length ≤ **5000 chars**
-* Saves execution history
-* Sends code to Docker executor
-
-### **3️ Secure Docker Sandbox**
-
-* Executes untrusted code with:
-
-  * `--network none` → No internet
-  * `--read-only` → No file writes
-  * `--memory=128m` → RAM limit
-  * Timeout 10 sec
-* Images:
-
-  * Python → `python:3.11-slim`
-  * JavaScript → `node:18-slim`
-
-### **4️ Executor Module**
-
-* Writes code to temporary file
-* Mounts as read-only inside container
-* Captures stdout, stderr, exit code
-
-### **5️ History System**
-
-* Stores last 10 runs in `history.json`
-* Accessible via `/history`
+| Image                   | Size      |
+| ----------------------- | --------- |
+| Backend (Multi-stage)   | ~55–60 MB |
+| Frontend (Nginx Alpine) | ~20–25 MB |
 
 ---
 
-## 🔁 Execution Flow
+## 8. Docker Compose Configuration
 
-1. User writes code in UI
-2. Browser sends POST → `/run`
-3. Flask validates code
-4. Code is written to temp file
-5. Executor selects container (Python/JS)
-6. Docker runs with security restrictions
-7. Output/error returned to Flask
-8. Added to history
-9. Shown in UI
+Docker Compose is used for:
 
----
+* Local development
+* Staging deployment
+* Multi-container orchestration
 
-# 🔧 Prerequisites
+### Services
 
-* Python 3.8+
-* Docker Desktop
-* WSL2 recommended
-* Git
+* `frontend`
+* `backend`
+* `postgres`
 
----
+### Features
 
-# 🚀 Getting Started (Step-by-Step)
+* Custom Docker network
+* Named volume for DB persistence
+* Environment-based configuration
 
 ---
 
-## **1️⃣ Clone the Project**
+## 9. CI/CD Pipeline Using Jenkins
+
+The entire CI/CD workflow is defined in a **Jenkinsfile**.
+
+### Pipeline Stages
+
+1. Checkout Code
+2. Build Backend Docker Image
+3. Run Unit Tests inside Container
+4. Build Frontend Docker Image
+5. Security Scan using Trivy
+6. Deploy to Staging Environment
+
+---
+
+## 10. Continuous Integration (Webhook)
+
+* GitHub Webhook triggers Jenkins automatically
+* No manual “Build Now”
+* Jenkins exposed using **ngrok** for webhook access
+
+✔ True Continuous Integration
+✔ Real-time automation
+
+---
+
+## 11. Continuous Deployment
+
+Deployment is fully automated for the **staging environment**.
+
+### Deployment Actions
+
+* Stop old containers
+* Build latest images
+* Start new containers
+* Verify application health
+
+Deployment is handled using **Docker Compose**.
+
+---
+
+## 12. Deployment Script (`deploy.sh`)
 
 ```bash
-git clone <your_repo_url>
-cd Safe_Code_Executor
+#!/bin/bash
+echo "Stopping old containers..."
+docker-compose down
+
+echo "Starting updated containers..."
+docker-compose up -d --build
+
+echo "Deployment completed successfully"
 ```
 
-**Expected Output**
-
-```
-Cloning into 'Safe_Code_Executor'...
-```
+ Can be reused locally or in Jenkins
+ Matches real-world deployment scripts
 
 ---
 
-## **2️⃣ Create & Activate Virtual Environment**
+## 13. Runtime Health Verification
+
+### Backend Health Check
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate
+curl http://localhost:5000/health
 ```
 
-**Expected**
+Expected Response:
+
+```json
+{
+  "status": "UP",
+  "database": "CONNECTED"
+}
+```
+
+### Frontend
 
 ```
-(venv)
+http://localhost:9090
 ```
 
 ---
 
-## **3️⃣ Install Dependencies**
+## 14. Security Scanning with Trivy
+
+* Integrated directly into Jenkins pipeline
+* Scans Docker images for vulnerabilities
+* Pipeline fails on **HIGH / CRITICAL** issues
+
+✔ Security-first CI/CD approach
+
+---
+
+## 15. Environment Strategy
+
+Although the same Docker Compose file is reused, environments are logically separated:
+
+### Development
+
+* Local execution
+* Manual docker-compose
+
+### Staging
+
+* Jenkins-managed deployment
+* Fully automated
+* Pre-production validation
+
+*(Production concepts are documented but not deployed to avoid overengineering)*
+
+---
+
+## 16. Troubleshooting Guide
+
+### Backend Not Reachable
 
 ```bash
-pip install -r requirements.txt
+docker-compose logs backend
 ```
 
-**Expected**
-
-```
-Successfully installed flask ...
-```
-
----
-
-## **4️⃣ Start Docker Daemon**
-
-Open **Docker Desktop** → Wait for "Docker is running".
-
-Optional test:
+### Database Connection Issues
 
 ```bash
-docker run hello-world
+docker-compose logs postgres
+```
+
+### Webhook Not Triggering
+
+* Verify webhook URL ends with `/github-webhook/`
+* Ensure Jenkins is reachable (ngrok)
+
+### Trivy Scan Fails
+
+* Update base images
+* Fix vulnerable dependencies
+
+---
+
+## 17. What This Project Demonstrates
+
+*  End-to-end CI/CD automation
+*  Webhook-driven Jenkins pipeline
+*  Containerized testing
+*  Multi-stage Docker builds
+*  Security scanning integration
+*  Real staging deployment flow
+*  Industry-aligned DevOps practices
+
+---
+
+## 18. Conclusion
+
+This capstone project successfully implements a **real-world CI/CD pipeline** using Docker and Jenkins. It automates the complete workflow from code commit to deployment while ensuring security, consistency, and reliability.
+
+The integration of **GitHub Webhooks, Jenkins pipelines, Docker multi-stage builds, security scanning, and automated deployments** demonstrates strong practical DevOps knowledge suitable for real production environments and technical interviews.
+
+---
+===========================
+
+
+
+
+#  CI/CD FLOW DIAGRAMS & DETAILED EXPLANATION
+
+---
+
+
+###  CI Flow Diagram (Logical)
+
+```
+Developer
+   |
+   | git push
+   v
+GitHub Repository
+   |
+   | Webhook Trigger
+   v
+Jenkins CI Pipeline
+   |
+   +--> Checkout Code
+   |
+   +--> Build Backend Image
+   |
+   +--> Run Unit Tests (Pytest)
+   |
+   +--> Build Frontend Image
+   |
+   +--> Trivy Security Scan
 ```
 
 ---
 
-## **5️⃣ Run the Flask Server**
+###  CI Stages – What We Did
+
+#### 1️ Code Checkout
+
+Pulls latest code automatically from GitHub.
+
+```groovy
+stage('Checkout') {
+    steps {
+        checkout scm
+    }
+}
+```
+
+✔ Ensures Jenkins always works with latest commit
+✔ Triggered automatically via webhook
+
+---
+
+#### 2️ Backend Image Build
+
+Builds Docker image for Flask backend.
+
+```groovy
+stage('Build Backend Image') {
+    steps {
+        bat 'docker build -t flask-backend backend'
+    }
+}
+```
+
+✔ Uses **multi-stage Dockerfile**
+✔ Cached layers for faster builds
+
+---
+
+#### 3️ Unit Testing Inside Container
+
+Runs tests inside Docker, not locally.
+
+```groovy
+stage('Run Backend Tests') {
+    steps {
+        bat 'docker build -t flask-backend-test --target test backend'
+        bat 'docker run --rm flask-backend-test'
+    }
+}
+```
+
+ Real container testing
+ Pipeline fails if tests fail
+ No “works on my machine” issue
+
+---
+
+#### 4️ Frontend Image Build
+
+Builds Nginx-based frontend image.
+
+```groovy
+stage('Build Frontend Image') {
+    steps {
+        bat 'docker build -t flask-frontend frontend'
+    }
+}
+```
+
+✔ Lightweight image
+✔ Static content served via Nginx
+
+---
+
+#### 5️ Security Scan (Trivy)
+
+Scans images for vulnerabilities.
+
+```groovy
+stage('Security Scan') {
+    steps {
+        bat '''
+        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image flask-backend
+        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image flask-frontend
+        '''
+    }
+}
+```
+
+✔ Detects CVEs
+✔ Industry-grade security practice
+✔ Integrated directly into CI
+
+---
+
+##  Continuous Deployment (CD) Flow
+
+
+###  CD Flow Diagram
+
+```
+CI Success
+   |
+   v
+Staging Deployment Stage
+   |
+   +--> Stop Old Containers
+   |
+   +--> Pull / Build Latest Images
+   |
+   +--> Start New Containers
+   |
+   +--> Verify Application Health
+```
+
+---
+
+###  CD Stage – What We Did
+
+#### 6️ Deploy to Staging (Docker Compose)
+
+```groovy
+stage('Deploy to Staging') {
+    steps {
+        bat '''
+        docker-compose down
+        docker-compose up -d --build
+        '''
+    }
+}
+```
+
+ Stops old containers
+ Starts fresh containers
+ Uses same images tested in CI
+ Acts as **staging environment**
+
+---
+
+
+
+###  Webhook Trigger Flow
+
+```
+Developer Pushes Code
+        |
+        v
+ GitHub Webhook
+        |
+        v
+   Jenkins Endpoint
+        |
+        v
+   CI/CD Pipeline Starts Automatically
+```
+
+###  Key Points
+
+* No manual Jenkins build
+* Every push = auto build
+* Implemented using **GitHub Webhook + ngrok**
+
+
+
+---
+
+##  Multi-Stage Docker Build – Explained
+
+### Why Multi-Stage?
+
+* Smaller images
+* Better security
+* Faster deployments
+
+### Backend Dockerfile Concept
+
+```dockerfile
+# Builder stage
+FROM python:3.11-slim AS builder
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Runtime stage
+FROM python:3.11-slim
+RUN useradd -m appuser
+WORKDIR /app
+COPY --from=builder /usr/local/lib/python3.11 /usr/local/lib/python3.11
+COPY app app
+USER appuser
+CMD ["python", "app/main.py"]
+```
+
+✔ Builder stage removed from final image
+✔ Non-root user used
+✔ Only required dependencies included
+
+---
+
+##  Database & Networking Flow
+
+### Docker Compose Networking
+
+```
+Frontend  ---> Backend  ---> PostgreSQL
+   |            |              |
+  Nginx        Flask         Volume
+```
+
+### Environment Variables Used
+
+```yaml
+environment:
+  DB_HOST: postgres
+  DB_PORT: 5432
+  DB_NAME: testdb
+  DB_USER: postgres
+  DB_PASSWORD: postgres
+```
+
+✔ No hardcoded credentials
+✔ Docker internal DNS used
+✔ Persistent volume for DB
+
+---
+
+##  Deployment Script (Optional Automation)
 
 ```bash
-python3 app/main.py
+#!/bin/bash
+echo "Stopping old containers..."
+docker-compose down
+
+echo "Starting new containers..."
+docker-compose up -d --build
+
+echo "Deployment completed"
 ```
 
+* Can be reused outside Jenkins
+* Matches real production scripts
+
 ---
 
-# 🧪 API Testing (Step-by-Step)
+##  Verification After Deployment
 
----
-
-## **6️⃣ Health Check**
+### Backend Health Check
 
 ```bash
-curl http://127.0.0.1:5000/
-```
-
-Expected:
-
-```
-Safe Code Executor API is running!
-```
-
----
-
-## **7️⃣ Run Python Code**
-
-```bash
-curl -X POST http://127.0.0.1:5000/run \
- -H "Content-Type: application/json" \
- -d '{"language":"python","code":"print(2+2)"}'
+curl http://localhost:5000/health
 ```
 
 Expected:
 
 ```json
-{"output":"4\n"}
+{
+  "status": "UP",
+  "database": "CONNECTED"
+}
 ```
+
+### Frontend
+
+```
+http://localhost:9090
+```
+
+* Confirms full end-to-end flow
 
 ---
 
-## **8️⃣ Run JavaScript Code**
 
-```bash
-curl -X POST http://127.0.0.1:5000/run \
- -H "Content-Type: application/json" \
- -d '{"language":"javascript","code":"console.log(2+2)"}'
-```
 
-Expected:
 
-```json
-{"output":"4\n"}
-```
-
----
-
-# 🔐 Security Tests (With Expected Outputs)
-
----
-
-## **9️⃣ Infinite Loop (Timeout)**
-
-```bash
-curl -X POST http://127.0.0.1:5000/run \
-  -H "Content-Type: application/json" \
-  -d '{"language":"python","code":"while True: pass"}'
-```
-
-Expected:
-
-```json
-{"error":"Execution timed out after 10 seconds.","exit_code":-2}
-```
-
----
-
-## **🔟 Memory Limit Test**
-
-```bash
-curl -X POST http://127.0.0.1:5000/run \
-  -H "Content-Type: application/json" \
-  -d '{"language":"python","code":"x = \"a\" * 1000000000"}'
-```
-
-Expected:
-
-```json
-{"error":"","exit_code":137}
-```
-
----
-
-## **1️⃣1️⃣ Network Block**
-
-```bash
-curl -X POST http://127.0.0.1:5000/run \
-  -H "Content-Type: application/json" \
-  -d '{"language":"python","code":"import urllib.request; urllib.request.urlopen(\"https://google.com\")"}'
-```
-
-Expected: DNS/network failure (no internet inside container).
-
----
-
-## **1️⃣2️⃣ Read-Only Filesystem**
-
-```bash
-curl -X POST http://127.0.0.1:5000/run \
- -H "Content-Type: application/json" \
- -d '{"language":"python","code":"open(\"/tmp/hack.txt\",\"w\").write(\"hello\")"}'
-```
-
-Expected:
-
-```
-OSError: [Errno 30] Read-only file system
-```
-
----
-
-## **1️⃣3️⃣ Code Length Limit**
-
-Send >5000 characters.
-
-Expected:
-
-```json
-{"error":"Code too long. Maximum allowed length is 5000 characters."}
-```
-
----
-
-# 🖥️ Web UI
-
-Open in browser:
-
-```
-http://127.0.0.1:5000/ui
-```
-
-Features:
-✔ Textarea for code
-✔ Language dropdown
-✔ Run button
-✔ Clear button
-✔ Output console
-
----
-
-# 📜 Execution History
-
-Get last 10 executions:
-
-```bash
-curl http://127.0.0.1:5000/history
-```
-
----
-
-# 🛡 Security Features Implemented
-
-* Timeout (10 seconds)
-* Memory limit (128MB)
-* Network disabled (`--network none`)
-* Read-only filesystem
-* Mounted file read-only
-* Code length limit (5000 chars)
-* Isolated Docker container per run
-
----
-
-# 🎓 What I Learned
-
-### **Docker Security**
-
-* Container isolation
-* Memory/CPU limits
-* No-network execution
-* Read-only root filesystems
-
-### **Safe Code Execution Design**
-
-* Prevent infinite loops
-* Prevent memory abuse
-* Prevent file writes
-* Prevent network misuse
-
-### **Backend Development**
-
-* REST API design (`/run`, `/history`, `/ui`)
-* JSON-based responses
-* Error handling
-
-### **Frontend Integration**
-
-* HTML UI with textarea & live output
-* Simple, practical developer tool
-
----
-
-If you want **badges**, **diagrams**, **GIF demo**, or **beautiful GitHub styling**, just tell me!
