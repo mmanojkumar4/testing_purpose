@@ -632,5 +632,116 @@ http://localhost:9090
 ---
 
 
+Perfect 👍
+Here is a **VERY SIMPLE, CLEAN Jenkins section** — **only CI/CD + Webhook flow**, no heavy theory.
+You can paste this **directly into your README**.
 
+---
+
+## 🔧 Jenkins – CI/CD & Webhook Flow
+
+### Why Jenkins?
+
+Jenkins is used as the **CI/CD automation tool** in this project.
+It automatically builds, tests, and deploys the application whenever code is pushed to GitHub.
+
+---
+
+### Jenkins + GitHub Webhook Flow
+
+```
+Developer pushes code to GitHub
+        ↓
+GitHub Webhook triggers Jenkins
+        ↓
+Jenkins Pipeline starts automatically
+        ↓
+Build → Test → Deploy
+```
+
+✔ No manual build trigger
+✔ Fully automated CI/CD
+
+---
+
+### What Jenkins Does in This Project
+
+Jenkins performs the following steps:
+
+1. **Checkout code** from GitHub
+2. **Build Docker images** for backend and frontend
+3. **Run tests inside Docker containers**
+4. **Scan images using Trivy**
+5. **Deploy application using Docker Compose**
+6. **Verify backend health endpoint**
+
+---
+
+### Jenkins Pipeline (Simple View)
+
+```
+Checkout Code
+   ↓
+Build Backend Image
+   ↓
+Run Backend Tests
+   ↓
+Build Frontend Image
+   ↓
+Security Scan (Trivy)
+   ↓
+Deploy to Staging
+```
+
+---
+
+### Jenkinsfile (Short Example)
+
+```groovy
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Images') {
+            steps {
+                sh 'docker build -t flask-backend backend'
+                sh 'docker build -t flask-frontend frontend'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh 'docker-compose down'
+                sh 'docker-compose up -d'
+            }
+        }
+    }
+}
+```
+
+---
+
+### Webhook Implementation
+
+* GitHub Webhook is configured to call Jenkins
+* Jenkins endpoint: `/github-webhook/`
+* ngrok is used to expose Jenkins when running locally
+* Every push triggers the pipeline automatically
+
+✔ Continuous Integration achieved
+✔ Continuous Deployment enabled
+
+---
+
+### One-Line Summary
+
+> Jenkins is integrated with GitHub Webhooks to automatically build, test, and deploy Dockerized applications using a CI/CD pipeline.
+
+---
 
