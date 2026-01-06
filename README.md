@@ -22,7 +22,7 @@ Every code push to GitHub automatically triggers the Jenkins pipeline, which bui
 
 | Layer             | Technology            |
 | ----------------- | --------------------- |
-| Frontend          | HTML, CSS, JavaScript |
+| Frontend          | HTML, CSS, JavaScript,Nginx |
 | Backend           | Python Flask          |
 | Database          | PostgreSQL            |
 | CI/CD             | Jenkins               |
@@ -99,25 +99,27 @@ Frontend --> Backend --> PostgreSQL
 ```
 ci-cd-flask-project/
 │
-├── backend/
-│   ├── app/
-│   │   ├── main.py
-│   │   └── db.py
-│   ├── tests/
-│   ├── requirements.txt
-│   └── Dockerfile
+├── backend/                # Flask backend service
+│   ├── app/                # Application source code
+│   │   ├── main.py         # API entry point
+│   │   └── db.py           # Database connection logic
+│   ├── tests/              # Backend unit tests
+│   ├── requirements.txt   # Python dependencies
+│   └── Dockerfile          # Backend Docker image build
 │
-├── frontend/
-│   ├── templates/
-│   ├── static/
-│   └── Dockerfile
+├── frontend/               # Frontend service
+│   ├── templates/          # HTML templates
+│   ├── static/             # CSS, JS, static assets
+│   └── Dockerfile          # Frontend Docker image build
 │
-├── scripts/
-│   └── deploy.sh
+├── scripts/                # Deployment automation
+│   └── deploy-staging.sh   # Staging deployment script
 │
-├── docker-compose.yml
-├── Jenkinsfile
-└── README.md
+├── docker-compose.yml      # Local multi-container setup
+├── Jenkinsfile             # CI/CD pipeline definition
+└── README.md               # Project documentation
+
+
 ```
 
 ---
@@ -291,8 +293,7 @@ Jenkins CI Pipeline
 
 ---
 
-###  CI Stages – What We Did
-
+###  CI Stagess
 #### 1️ Code Checkout
 
 Pulls latest code automatically from GitHub.
@@ -419,7 +420,7 @@ Staging Deployment Stage
 
 ---
 
-###  CD Stage – What We Did
+###  CD Stages – 
 
 ####  Deploy to Staging (Docker Compose)
 
@@ -468,36 +469,64 @@ Developer Pushes Code
 
 ---
 
-##  Multi-Stage Docker Build 
 
-### Why Multi-Stage
+##  Non-Root User (Container Security)
 
-* Smaller images
-* Better security
-* Faster deployments
+Docker containers run as **root by default**, which is a security risk.
+This project follows best practices by running the application as a **non-root user**.
 
-### Backend Dockerfile Concept
+**Implementation**
+
+* Create a dedicated user (`appuser`)
+* Assign ownership of application files
+* Run the container as `appuser`
 
 ```dockerfile
-# Builder stage
+RUN useradd -m appuser
+WORKDIR /app
+COPY app app
+RUN chown -R appuser:appuser /app
+USER appuser
+```
+
+**Benefits**
+
+* Reduced attack surface
+* Prevents system-level access
+* Production-grade container security
+
+---
+
+##  Multi-Stage Docker Builds (Optimization)
+
+Multi-stage builds separate **build-time** and **runtime** dependencies so only required artifacts are shipped.
+
+**Why Used**
+
+* Smaller image size
+* Fewer dependencies
+* Better security and faster deployments
+
+**Implementation**
+
+```dockerfile
 FROM python:3.11-slim AS builder
 WORKDIR /app
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --prefix=/install -r requirements.txt
 
-# Runtime stage
 FROM python:3.11-slim
-RUN useradd -m appuser
 WORKDIR /app
-COPY --from=builder /usr/local/lib/python3.11 /usr/local/lib/python3.11
+COPY --from=builder /install /usr/local
 COPY app app
-USER appuser
 CMD ["python", "app/main.py"]
 ```
 
-* Builder stage removed from final image
-* Non-root user used
-* Only required dependencies included
+**Result**
+
+* Image size reduced by ~50%
+* No build tools in runtime image
+* Cleaner, production-ready container
 
 ---
 
@@ -628,23 +657,146 @@ environment:
 ---
 
 ## 16. Troubleshooting Guide
+This section lists common issues encountered during local development, Docker execution, and CI/CD pipeline runs, along with practical solutions.
+---
 
-### Backend Not Reachable
+###  Containers Not Starting or Exiting Immediately
+
+**Symptoms**
+
+* `docker-compose up` exits
+* Containers restart continuously or stop
+
+**Resolution**
+
+```bash
+docker-compose ps
+docker-compose logs
+```
+
+* Verify `CMD` or `ENTRYPOINT` in Dockerfiles
+* Ensure correct working directory
+* Check application crash logs
+
+---
+
+### Frontend Loads but Backend Is Not Reachable
+
+**Symptoms**
+
+* UI loads at port `9090`
+* API calls fail or show “Backend not reachable”
+
+**Resolution**
 
 ```bash
 docker-compose logs backend
 ```
 
-### Database Connection Issues
+* Ensure backend listens on `0.0.0.0`
+* Confirm frontend API URL points to backend service name
+* Verify backend container is running
+
+---
+
+###  Database Connection Errors
+
+**Symptoms**
+
+* Backend crashes with database-related errors
+* `/health` endpoint shows DB failure
+
+**Resolution**
 
 ```bash
-docker-compose logs postgres
+docker-compose logs postgres_db
 ```
 
-### Webhook Not Triggering
+* Ensure database service is running
+* Verify environment variables (`DB_HOST`, `DB_USER`, `DB_PASSWORD`)
+* Restart services:
 
-* Verify webhook URL ends with `/github-webhook/`
-* Ensure Jenkins is reachable (ngrok)
+```bash
+docker-compose restart
+```
+
+---
+
+###  Docker Compose Builds Successfully but Services Don’t Run
+
+**Symptoms**
+
+* `docker-compose build` succeeds
+* Containers fail at runtime
+
+**Resolution**
+
+* Check exposed ports for conflicts
+* Ensure correct file paths inside containers
+* Inspect logs for missing dependencies
+
+---
+
+###  Jenkins Pipeline Fails During Docker Build
+
+**Symptoms**
+
+* Pipeline fails at `docker build`
+* Snapshot or layer errors
+
+**Resolution**
+
+```bash
+docker system prune -af
+```
+
+* Restart Docker service
+* Ensure Jenkins has access to Docker socket:
+
+```bash
+-v /var/run/docker.sock:/var/run/docker.sock
+```
+
+---
+
+###  GitHub Webhook Not Triggering Jenkins Build
+
+**Symptoms**
+
+* Code push does not start pipeline
+
+**Resolution**
+
+* Verify webhook URL ends with:
+
+```
+/github-webhook/
+```
+
+* Ensure Jenkins is publicly reachable (ngrok if running locally)
+* Check GitHub → Webhooks → Recent Deliveries
+
+---
+
+###  Old Application Version Still Running After Deployment
+
+**Symptoms**
+
+* Latest code changes not visible
+
+**Resolution**
+
+```bash
+docker-compose down
+docker-compose pull
+docker-compose up -d
+```
+
+* Remove unused images if required:
+
+```bash
+docker image prune -a
+```
 
 ### Trivy Scan Fails
 
@@ -672,14 +824,6 @@ This capstone project successfully implements a **real-world CI/CD pipeline** us
 The integration of **GitHub Webhooks, Jenkins pipelines, Docker multi-stage builds, security scanning, and automated deployments** demonstrates strong practical DevOps knowledge suitable for real production environments and technical interviews.
 
 ---
-
-
-
-
-
-
-
-
 
 
 
