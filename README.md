@@ -534,14 +534,65 @@ CMD ["python", "app/main.py"]
 
 ### Docker Compose Networking
 
+Docker Compose creates a private internal network where all services can talk to each other using service names.
+
 ```
-Frontend  ---> Backend  ---> PostgreSQL
-   |            |              |
-  Nginx        Flask         Volume
+Frontend  --->  Backend  --->  PostgreSQL
+   |            |               |
+  Nginx        Flask          Volume
 ```
 
 ---
 
+### Frontend → Backend
+
+* Frontend runs on **Nginx**
+* API calls are sent to the backend using the service name `backend`
+* No `localhost` is used inside containers
+
+Example:
+
+```js
+fetch("http://backend:5000/api/health")
+```
+
+---
+
+### Backend → Database
+
+* Backend connects to PostgreSQL using the service name `postgres_db`
+* Database credentials are passed using environment variables
+
+Example:
+
+```env
+DB_HOST=postgres_db
+DB_PORT=5432
+DB_NAME=appdb
+```
+
+---
+
+### Database Persistence
+
+* PostgreSQL uses a Docker volume
+* Data is not lost when containers restart
+
+```yaml
+volumes:
+  - postgres_data:/var/lib/postgresql/data
+```
+
+---
+
+### Key Points
+
+* Containers communicate using **service names**
+* Database runs only inside Docker network (secure)
+* Data is persistent using volumes
+* Same setup works for **local, staging, and CI/CD**
+
+---
 
 ## 12. Deployment Script (`deploy_staging.sh`)
 
