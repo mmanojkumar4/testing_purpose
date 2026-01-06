@@ -466,7 +466,6 @@ Developer Pushes Code
 * Implemented using **GitHub Webhook + ngrok**
 
 
-
 ---
 
 
@@ -711,7 +710,7 @@ environment:
 This section lists common issues encountered during local development, Docker execution, and CI/CD pipeline runs, along with practical solutions.
 ---
 
-###  Containers Not Starting or Exiting Immediately
+###  I.Containers Not Starting or Exiting Immediately
 
 **Symptoms**
 
@@ -731,7 +730,7 @@ docker-compose logs
 
 ---
 
-### Frontend Loads but Backend Is Not Reachable
+### II.Frontend Loads but Backend Is Not Reachable
 
 **Symptoms**
 
@@ -750,7 +749,7 @@ docker-compose logs backend
 
 ---
 
-###  Database Connection Errors
+### III.Database Connection Errors
 
 **Symptoms**
 
@@ -773,7 +772,7 @@ docker-compose restart
 
 ---
 
-###  Docker Compose Builds Successfully but Services Don’t Run
+### IV.Docker Compose Builds Successfully but Services Don’t Run
 
 **Symptoms**
 
@@ -788,7 +787,7 @@ docker-compose restart
 
 ---
 
-###  Jenkins Pipeline Fails During Docker Build
+### V.Jenkins Pipeline Fails During Docker Build
 
 **Symptoms**
 
@@ -810,10 +809,9 @@ docker system prune -af
 
 ---
 
-###  GitHub Webhook Not Triggering Jenkins Build
+### VI.GitHub Webhook Not Triggering Jenkins Build
 
 **Symptoms**
-
 * Code push does not start pipeline
 
 **Resolution**
@@ -829,7 +827,7 @@ docker system prune -af
 
 ---
 
-###  Old Application Version Still Running After Deployment
+### VII. Old Application Version Still Running After Deployment
 
 **Symptoms**
 
@@ -849,7 +847,7 @@ docker-compose up -d
 docker image prune -a
 ```
 
-### Trivy Scan Fails
+### VIII.Trivy Scan Fails
 
 * Update base images
 * Fix vulnerable dependencies
@@ -885,7 +883,16 @@ The integration of **GitHub Webhooks, Jenkins pipelines, Docker multi-stage buil
 
 
 
-
+I.
+II.
+III.
+IV.
+V.
+VI.
+VII.
+VIII.
+IX.
+X.
 
 
 
