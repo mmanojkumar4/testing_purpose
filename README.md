@@ -877,6 +877,123 @@ The integration of **GitHub Webhooks, Jenkins pipelines, Docker multi-stage buil
 
 
 
+##  How to Run This Project Using Docker Hub Images (Including PostgreSQL)
+
+This project uses **prebuilt Docker images** for the **frontend and backend**, while **PostgreSQL runs as an official Docker container**.
+Using Docker Compose, the **entire stack (Frontend + Backend + Database)** can be started with a single command.
+
+---
+
+### Step 1: Pull Application Images from Docker Hub
+
+```bash
+docker pull <your-dockerhub-username>/flask-backend
+docker pull <your-dockerhub-username>/flask-frontend
+```
+
+✔ Backend and frontend images downloaded
+✔ No need to build application images locally
+
+---
+
+### Step 2: PostgreSQL Setup (Automatically Handled)
+
+PostgreSQL is started automatically using the **official PostgreSQL image** via Docker Compose.
+
+```yaml
+postgres_db:
+  image: postgres:15
+  volumes:
+    - postgres_data:/var/lib/postgresql/data
+```
+
+✔ No manual database installation
+✔ Persistent storage using Docker volumes
+
+---
+
+### Step 3: Use Docker Hub Images in `docker-compose.yml`
+
+Replace `build` with `image` for backend and frontend:
+
+```yaml
+backend:
+  image: <your-dockerhub-username>/flask-backend
+
+frontend:
+  image: <your-dockerhub-username>/flask-frontend
+```
+
+PostgreSQL continues to run as a service inside Docker Compose.
+
+---
+
+### Step 4: Start the Full Application Stack
+
+```bash
+docker-compose up -d
+```
+
+This starts:
+
+* Frontend (Nginx)
+* Backend (Flask)
+* PostgreSQL (Database)
+
+✔ All services run on the same Docker network
+✔ Database is securely isolated
+
+---
+
+### Step 5: Verify Application & Database
+
+**Backend Health Check**
+
+```bash
+curl http://localhost:5000/health
+```
+
+Expected response:
+
+```json
+{
+  "status": "UP",
+  "database": "CONNECTED"
+}
+```
+
+✔ Confirms backend is running
+✔ Confirms PostgreSQL connection
+
+---
+
+**Frontend**
+
+```
+http://localhost:9090
+```
+
+✔ UI loads successfully
+✔ Backend and database status visible
+
+---
+
+### Optional: Build Everything Locally
+
+If someone prefers building images locally:
+
+```bash
+docker-compose up -d --build
+```
+
+---
+
+
+
+---
+
+
+
 
 
 
