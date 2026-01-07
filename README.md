@@ -1,5 +1,4 @@
-
-
+![db](screenshots/running.png)
 #  CI/CD Capstone Project
 
 ## 1. Project Overview
@@ -186,8 +185,6 @@ The entire CI/CD workflow is defined in a **Jenkinsfile**.
 
 ##  Jenkins – CI/CD & Webhook Flow
 
-### Why Jenkins?
-
 Jenkins is used as the **CI/CD automation tool** in this project.
 It automatically builds, tests, and deploys the application whenever code is pushed to GitHub.
 
@@ -210,7 +207,7 @@ Build → Test → Deploy
 
 ---
 
-### What Jenkins Does in This Project
+### What Jenkins Does in This Project 
 
 Jenkins performs the following steps:
 
@@ -261,7 +258,6 @@ Deploy to Staging
 * GitHub Webhook triggers Jenkins automatically
 * No manual “Build Now”
 * Jenkins exposed using **ngrok** for webhook access
-
 * True Continuous Integration
 * Real-time automation
 
@@ -293,8 +289,9 @@ Jenkins CI Pipeline
 
 ---
 
-###  CI Stagess
-#### 1️ Code Checkout
+
+###  CI Stages
+#### I. Code Checkout
 
 Pulls latest code automatically from GitHub.
 
@@ -311,7 +308,7 @@ stage('Checkout') {
 
 ---
 
-#### 2️ Backend Image Build
+#### II. Backend Image Build
 
 Builds Docker image for Flask backend.
 
@@ -328,7 +325,7 @@ stage('Build Backend Image') {
 
 ---
 
-#### 3️ Unit Testing Inside Container
+#### III. Unit Testing Inside Container
 
 Runs tests inside Docker, not locally.
 
@@ -347,7 +344,7 @@ stage('Run Backend Tests') {
 
 ---
 
-#### 4️ Frontend Image Build
+#### IV. Frontend Image Build
 
 Builds Nginx-based frontend image.
 
@@ -364,10 +361,11 @@ stage('Build Frontend Image') {
 
 ---
 
-#### 5️ Security Scan (Trivy)
+#### V. Security Scan (Trivy)
 
-Scans images for vulnerabilities.
-
+* Integrated directly into Jenkins pipeline
+* Scans Docker images for vulnerabilities
+* Pipeline fails on **HIGH / CRITICAL** issues
 ```groovy
 stage('Security Scan') {
     steps {
@@ -464,11 +462,7 @@ Developer Pushes Code
 * No manual Jenkins build
 * Every push = auto build
 * Implemented using **GitHub Webhook + ngrok**
-
-
 ---
-
-
 ##  Non-Root User (Container Security)
 
 Docker containers run as **root by default**, which is a security risk.
@@ -529,7 +523,7 @@ CMD ["python", "app/main.py"]
 
 ---
 
-##  Database & Networking Flow
+## 12.  Database & Networking Flow
 
 ### Docker Compose Networking
 
@@ -584,16 +578,7 @@ volumes:
 
 ---
 
-### Key Points
-
-* Containers communicate using **service names**
-* Database runs only inside Docker network (secure)
-* Data is persistent using volumes
-* Same setup works for **local, staging, and CI/CD**
-
----
-
-## 12. Deployment Script (`deploy_staging.sh`)
+## 13. Deployment Script (`deploy_staging.sh`)
 
 ```bash
 #!/bin/bash
@@ -639,7 +624,7 @@ http://localhost:9090
 
 ---
 
-## 13. Runtime Health Verification
+## 14. Runtime Health Verification
 
 ### Backend Health Check
 
@@ -664,15 +649,6 @@ http://localhost:9090
 
 ---
 
-## 14. Security Scanning with Trivy
-
-* Integrated directly into Jenkins pipeline
-* Scans Docker images for vulnerabilities
-* Pipeline fails on **HIGH / CRITICAL** issues
-
-* Security-first CI/CD approach
-
----
 
 ## 15. Environment Strategy
 
@@ -853,31 +829,7 @@ docker image prune -a
 * Fix vulnerable dependencies
 
 ---
-
-## 17. What This Project Demonstrates
-
-*  End-to-end CI/CD automation
-*  Webhook-driven Jenkins pipeline
-*  Containerized testing
-*  Multi-stage Docker builds
-*  Security scanning integration
-*  Real staging deployment flow
-*  Industry-aligned DevOps practices
-
----
-
-## 18. Conclusion
-
-This capstone project successfully implements a **real-world CI/CD pipeline** using Docker and Jenkins. It automates the complete workflow from code commit to deployment while ensuring security, consistency, and reliability.
-
-The integration of **GitHub Webhooks, Jenkins pipelines, Docker multi-stage builds, security scanning, and automated deployments** demonstrates strong practical DevOps knowledge suitable for real production environments and technical interviews.
-
----
-
-
-
-
-##  How to Run This Project Using Docker Hub Images (Including PostgreSQL)
+## 17. How to Run This Project Using Docker Hub Images
 
 This project uses **prebuilt Docker images** for the **frontend and backend**, while **PostgreSQL runs as an official Docker container**.
 Using Docker Compose, the **entire stack (Frontend + Backend + Database)** can be started with a single command.
@@ -891,8 +843,8 @@ docker pull <your-dockerhub-username>/flask-backend
 docker pull <your-dockerhub-username>/flask-frontend
 ```
 
-✔ Backend and frontend images downloaded
-✔ No need to build application images locally
+* Backend and frontend images downloaded
+* No need to build application images locally
 
 ---
 
@@ -907,8 +859,8 @@ postgres_db:
     - postgres_data:/var/lib/postgresql/data
 ```
 
-✔ No manual database installation
-✔ Persistent storage using Docker volumes
+* No manual database installation
+* Persistent storage using Docker volumes
 
 ---
 
@@ -940,8 +892,8 @@ This starts:
 * Backend (Flask)
 * PostgreSQL (Database)
 
-✔ All services run on the same Docker network
-✔ Database is securely isolated
+* All services run on the same Docker network
+* Database is securely isolated
 
 ---
 
@@ -962,8 +914,8 @@ Expected response:
 }
 ```
 
-✔ Confirms backend is running
-✔ Confirms PostgreSQL connection
+* Confirms backend is running
+* Confirms PostgreSQL connection
 
 ---
 
@@ -973,28 +925,33 @@ Expected response:
 http://localhost:9090
 ```
 
-✔ UI loads successfully
-✔ Backend and database status visible
+* UI loads successfully
+* Backend and database status visible
 
----
 
-### Optional: Build Everything Locally
-
-If someone prefers building images locally:
-
-```bash
-docker-compose up -d --build
-```
-
----
 
 
 
 ---
+## 18. What This Project Demonstrates
 
+*  End-to-end CI/CD automation
+*  Webhook-driven Jenkins pipeline
+*  Containerized testing
+*  Multi-stage Docker builds
+*  Security scanning integration
+*  Real staging deployment flow
+*  Industry-aligned DevOps practices
 
+---
 
+## 19. Conclusion
 
+This capstone project successfully implements a **real-world CI/CD pipeline** using Docker and Jenkins. It automates the complete workflow from code commit to deployment while ensuring security, consistency, and reliability.
+
+The integration of **GitHub Webhooks, Jenkins pipelines, Docker multi-stage builds, security scanning, and automated deployments** demonstrates strong practical DevOps knowledge suitable for real production environments and technical interviews.
+
+---
 
 
 
